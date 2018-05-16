@@ -521,7 +521,6 @@ TEST_FUNCTION(cancelling_a_send_works)
     socketlistener_destroy(socket_listener);
 }
 
-#if 0
 /* TODO: This test fails at the moment. Changes are needed to the way the link endpoints are tracked to make it succeed */
 TEST_FUNCTION(destroying_one_out_of_2_senders_works)
 {
@@ -640,6 +639,11 @@ TEST_FUNCTION(destroying_one_out_of_2_senders_works)
     messagesender_destroy(client_message_sender_2);
     link_destroy(client_link_2);
 
+    // send 2nd message
+    send_async_operation = messagesender_send_async(client_message_sender_1, client_send_message, on_message_send_complete, &sent_messages, 0);
+    ASSERT_IS_NOT_NULL_WITH_MSG(send_async_operation, "cannot send message");
+    message_destroy(client_send_message);
+
     // wait for 
     start_time = time(NULL);
     while ((now_time = time(NULL)),
@@ -659,14 +663,9 @@ TEST_FUNCTION(destroying_one_out_of_2_senders_works)
         ThreadAPI_Sleep(1);
     }
 
-    // send 2nd message
-    send_async_operation = messagesender_send_async(client_message_sender_1, client_send_message, on_message_send_complete, &sent_messages, 0);
-    ASSERT_IS_NOT_NULL_WITH_MSG(send_async_operation, "cannot send message");
-    message_destroy(client_send_message);
-
     // assert
     ASSERT_ARE_EQUAL_WITH_MSG(size_t, 2, sent_messages, "Bad sent messages count");
-    ASSERT_ARE_EQUAL_WITH_MSG(size_t, 0, server_instance.received_messages, "Bad received messages count");
+    ASSERT_ARE_EQUAL_WITH_MSG(size_t, 2, server_instance.received_messages, "Bad received messages count");
 
     // cleanup
     socketlistener_stop(socket_listener);
@@ -684,6 +683,5 @@ TEST_FUNCTION(destroying_one_out_of_2_senders_works)
     xio_destroy(server_instance.underlying_io);
     socketlistener_destroy(socket_listener);
 }
-#endif
 
 END_TEST_SUITE(local_client_server_tcp_e2e)
